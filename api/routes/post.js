@@ -87,33 +87,42 @@ router.get("/byuser",check, (req, res, next) => {
 
 router.put("/like", check, (req, res, next) => {
   console.log("BRO");
-  Post.findByIdAndUpdate(req.body.postId,{
-    $push:{likes:req.user._id}
-  },{
-    new:true
-  }).exec().then(response=>{
-    console.log(response);
-    res.status(201).json(response)
-  }).catch(err=>{
-    res.status(505).json({
-      err:err
-    })
-  })
-  
-});
-
-
-
-router.put("/dislike", check, (req, res, next) => {
   Post.findByIdAndUpdate(
     req.body.postId,
     {
-      $pull: { likes: req.user._id },
+      $push: { likes: req.user._id },
     },
     {
       new: true,
     }
   )
+    .populate("postedBy", "email name")
+    .exec()
+    .then((response) => {
+      console.log(response);
+      res.status(201).json(response);
+    })
+    .catch((err) => {
+      res.status(505).json({
+        err: err,
+      });
+    });
+  
+});
+
+
+router.put("/fav", check, (req, res, next) => {
+  console.log("BRO");
+  Post.findByIdAndUpdate(
+    req.body.postId,
+    {
+      $push: { favourite: req.user._id },
+    },
+    {
+      new: true,
+    }
+  )
+    .populate("postedBy", "email name")
     .exec()
     .then((response) => {
       console.log(response);
@@ -126,4 +135,96 @@ router.put("/dislike", check, (req, res, next) => {
     });
 });
 
+
+router.get("/find",check, (req, res)=> {
+  Post.find(
+    { "likes": req.user._id },
+    function (err, result) {
+      if (err) {
+        res.send(err);
+      } else {
+        console.log(result);
+        res.json(result);
+      }
+    }
+  );
+});
+
+
+
+router.put("/unfav", check, (req, res, next) => {
+  Post.findByIdAndUpdate(
+    req.body.postId,
+    {
+      $pull: { favourite: req.user._id },
+    },
+    {
+      new: true,
+    }
+  )
+    .populate("postedBy", "email name")
+    .exec()
+    .then((response) => {
+      console.log(response);
+      res.status(201).json(response);
+    })
+    .catch((err) => {
+      res.status(505).json({
+        err: err,
+      });
+    });
+});
+
+
+router.put("/dislike", check, (req, res, next) => {
+  Post.findByIdAndUpdate(
+    req.body.postId,
+    {
+      $pull: { likes: req.user._id },
+    },
+    {
+      new: true,
+    }
+  )
+    .populate("postedBy", "email name")
+    .exec()
+    .then((response) => {
+      console.log(response);
+      res.status(201).json(response);
+    })
+    .catch((err) => {
+      res.status(505).json({
+        err: err,
+      });
+    });
+});
+
+
+
+
+
+router.delete("/del",check,(req, res, next) => {
+  
+console.log(req.body.postId);
+  Post.deleteOne({ _id: req.body.postId, postedBy: req.user._id })
+    .exec()
+    .then((result) => {
+      console.log("SSSSSSSSSSSSSSSSSSSS");
+      console.log(result.n);
+      if(result.n==0){
+        res.status(200).json({
+          mess: "Not An Author",
+        });
+      }
+      res.status(200).json({
+        mess: "Post Removed",
+      });
+    })
+    .catch((err) => {
+      console.log("mannnnnnnnnnn");
+      res.status(500).json({
+        error: err,
+      });
+    });
+})
 module.exports = router;
