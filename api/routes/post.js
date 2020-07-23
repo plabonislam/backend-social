@@ -152,6 +152,44 @@ router.get("/find",check, (req, res)=> {
 
 
 
+
+
+
+router.put("/comment", check, (req, res, next) => {
+  console.log("BRO");
+
+  const message = {
+    text: req.body.text,
+    postedBy: req.user._id,
+    name:req.user.name,
+  };
+  console.log(message);
+  Post.findByIdAndUpdate(
+    req.body.postId,
+    {
+      $push: { comments: message },
+    },
+    {
+      new: true,
+    }
+  )
+    .populate("postedBy", "name email")
+    .exec()
+    .then((response) => {
+      console.log(response);
+      res.status(201).json(response);
+    })
+    .catch((err) => {
+      res.status(505).json({
+        err: err,
+      });
+    });
+});
+
+
+
+
+
 router.put("/unfav", check, (req, res, next) => {
   Post.findByIdAndUpdate(
     req.body.postId,
