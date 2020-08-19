@@ -6,19 +6,15 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const check = require("../middleware/check-auth");
-const admin=require("../middleware/check-admin");
+const admin = require("../middleware/check-admin");
 const Usercontroller = require("../controller/user");
-const user = require("../models/user");
+const Post = require("../models/post");
 
 router.post("/signup", Usercontroller.create_user);
 router.get("/", Usercontroller.all_users);
 router.patch("/:userId", Usercontroller.update_user);
 
 router.get("/activity", Usercontroller.all_activity);
-
-
-
-
 
 router.post("/signin", (req, res, next) => {
   User.find({ email: req.body.email })
@@ -29,7 +25,6 @@ router.post("/signin", (req, res, next) => {
           err: "Auth faild",
         });
       } else {
-        
         bcrypt.compare(req.body.password, users[0].password, (err, result) => {
           if (err) {
             return res.status(500).json({
@@ -42,7 +37,7 @@ router.post("/signin", (req, res, next) => {
             const UserInfo = {
               email: req.body.email,
               _id: users[0]._id,
-              name:users[0].name
+              name: users[0].name,
             };
 
             const token = jwt.sign(
@@ -52,7 +47,7 @@ router.post("/signin", (req, res, next) => {
               },
               process.env.JWT_secret,
               {
-                expiresIn: "1h",
+                expiresIn: "20h",
               }
             );
             res.status(200).json({
@@ -72,6 +67,36 @@ router.post("/signin", (req, res, next) => {
     .catch((err) => {
       res.status(500).json({
         err: "Auth Faild!!",
+      });
+    });
+});
+
+router.get("/:userId",check, (req, res, next) => {
+  const userId = req.params.userId;
+  console.log(userId,"ken nai");
+  User.findById(userId)
+    .populate("-password")
+    .exec()
+    .then((user) => {
+      console.log(user);
+      Post.find({ postedBy: userId })
+        .exec()
+        .then((posts) => {
+          res.status(200).json({
+            user,
+            posts,
+          });
+        })
+        .catch((err) => {
+          res.status(504).json({
+            err: err,
+          });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(504).json({
+        err: err,
       });
     });
 });
