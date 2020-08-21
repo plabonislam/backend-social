@@ -6,6 +6,8 @@ const UserSchema = mongoose.Schema({
 
   email: { type: String, required: true },
   password: { type: String, required: true },
+  follower: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   // role: { type: Boolean, default: false },
   // phone: {type:String, required:true},
   // gender: {type:String, required:true}

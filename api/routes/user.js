@@ -71,9 +71,9 @@ router.post("/signin", (req, res, next) => {
     });
 });
 
-router.get("/:userId",check, (req, res, next) => {
+router.get("/:userId", check, (req, res, next) => {
   const userId = req.params.userId;
-  console.log(userId,"ken nai");
+  console.log(userId, "ken nai");
   User.findById(userId)
     .populate("-password")
     .exec()
@@ -116,5 +116,83 @@ router.delete("/:userId", (req, res, next) => {
       });
     });
 });
+
+router.put("/follow", (req, res, next) => {
+  User.findOneAndUpdate(
+    req.body.follow,
+    {
+      $push: { follower: req.user._id },
+    },
+    { new: true }
+  )
+    .populate("-password")
+    .exec()
+    .then((result) => {
+      User.findByIdAndUpdate(
+        req.user._id,
+        {
+          $push: { following: req.body.follow },
+        },
+        {
+          new: true,
+        }
+      )
+        .exec()
+        .then((result) => {
+          res.status(200).json(result);
+        })
+        .catch((err) => {
+          res.status(505).json({
+            error: err
+          })
+        });
+    })
+    .catch((err)=>{
+      res.status(505).json({
+        err:err
+      })
+    })
+});
+
+
+
+router.put("/unfollow", (req, res, next) => {
+  User.findOneAndUpdate(
+    req.body.follow,
+    {
+      $pull: { follower: req.user._id },
+    },
+    { new: true }
+  )
+    .populate("-password")
+    .exec()
+    .then((result) => {
+      User.findByIdAndUpdate(
+        req.user._id,
+        {
+          $pull: { following: req.body.follow },
+        },
+        {
+          new: true,
+        }
+      )
+        .exec()
+        .then((result) => {
+          res.status(200).json(result);
+        })
+        .catch((err) => {
+          res.status(505).json({
+            error: err
+          })
+        });
+    })
+    .catch((err)=>{
+      res.status(505).json({
+        err:err
+      })
+    })
+});
+
+
 
 module.exports = router;
